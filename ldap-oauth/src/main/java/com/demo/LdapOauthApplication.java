@@ -3,6 +3,9 @@ package com.demo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
@@ -39,18 +42,22 @@ public class LdapOauthApplication {
         @Autowired
         private AuthenticationManager authenticationManager;
 
-        @Autowired
-        private DataSource dataSource;
+
+        @Bean
+        @ConfigurationProperties(prefix = "spring.dataSource")
+        public DataSource dataSource() {
+            return DataSourceBuilder.create().build();
+        }
 
 
         @Override
         public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
-            endpoints.tokenStore(new JdbcTokenStore(dataSource)).authenticationManager(authenticationManager);
+            endpoints.tokenStore(new JdbcTokenStore(dataSource())).authenticationManager(authenticationManager);
         }
 
         @Override
         public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
-            clients.jdbc(dataSource);
+            clients.jdbc(dataSource());
         }
     }
 }
